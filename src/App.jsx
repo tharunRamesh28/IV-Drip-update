@@ -142,6 +142,12 @@ function App() {
 
   const [lastDataChange, setLastDataChange] = useState(Date.now());
   const prevRawRef = React.useRef(null);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const raw = simMode ? simData : (fbData || null);
   const ivLevel = raw?.iv_level_ml;
@@ -158,7 +164,7 @@ function App() {
     prevRawRef.current = raw;
   }, [raw]);
 
-  const isStale = Date.now() - lastDataChange > 15000 && !simMode;
+  const isStale = now - lastDataChange > 15000 && !simMode;
 
   const patient = {
     name: raw?.patient_name ?? 'Arun Kumar',
