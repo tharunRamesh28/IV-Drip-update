@@ -148,6 +148,7 @@ function App() {
   const flowRate = raw?.flow_rate_ml_min;
   const drops = raw?.drops_per_min ?? (flowRate ? flowRate * 20 : 0);
   const devStatus = raw?.device_status ?? (simMode ? 'online' : 'offline');
+  const hardwareAlert = raw?.hardware_alert ?? '';
 
   // Track data changes for "No Flow" detection (15s rule)
   useEffect(() => {
@@ -178,6 +179,17 @@ function App() {
 
   const alerts = [];
   if (!simMode && devStatus === 'offline') alerts.push({ level: 'critical', title: 'Device Offline', message: 'No telemetry from ESP32.' });
+
+  // Hardware-issued Alert
+  if (!simMode && hardwareAlert) {
+     const isCritical = hardwareAlert.toLowerCase().includes('critical') || hardwareAlert.toLowerCase().includes('error');
+     alerts.push({
+       level: isCritical ? 'critical' : 'warning',
+       title: 'Hardware Alert',
+       message: hardwareAlert,
+       blinking: isCritical
+     });
+  }
 
   // Smart Alerts
   if (isStale && flowRate > 0) {
