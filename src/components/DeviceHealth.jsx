@@ -1,7 +1,7 @@
 import React from 'react';
 
 function DeviceHealth({ status, weight, flowRate, isStale }) {
-    const isOnline = status === 'online';
+    const isOnline = status === 'online' && !isStale;
     const isWeightValid = weight !== undefined && weight !== null && weight >= 0;
     const isFlowValid = flowRate !== undefined && flowRate !== null;
     const isHardwareHealthy = isOnline && !isStale && isWeightValid;
@@ -11,22 +11,22 @@ function DeviceHealth({ status, weight, flowRate, isStale }) {
             id: 'mcu',
             label: 'Microcontroller',
             type: 'ESP32-WROOM-32D',
-            status: isOnline && !isStale,
-            message: isStale ? 'Stale Data - Check Connection' : (!isOnline ? 'Hardware Offline' : 'Operational')
+            status: isOnline,
+            message: isStale ? 'Data Timeout - Check Connection' : (!isOnline ? 'Hardware Offline' : 'Operational')
         },
         {
             id: 'loadcell',
             label: 'Weight Sensor',
             type: 'Prec. Load Cell',
-            status: isWeightValid,
-            message: weight < 0 ? 'Calibration Error' : (weight === undefined || weight === null ? 'No Data' : 'Operational')
+            status: isWeightValid && isOnline,
+            message: !isOnline ? 'No Telemetry' : (weight < 0 ? 'Calibration Error' : 'Operational')
         },
         {
             id: 'hx711',
             label: 'ADC Converter',
             type: 'HX711 (24-bit BW)',
-            status: isWeightValid,
-            message: isWeightValid ? 'Signal Locked' : 'Check Wiring'
+            status: isWeightValid && isOnline,
+            message: !isOnline ? 'No Telemetry' : 'Signal Locked'
         },
         {
             id: 'wifi',
@@ -40,8 +40,8 @@ function DeviceHealth({ status, weight, flowRate, isStale }) {
     let diagnosticMessage = "System Fully Synchronized";
     let diagnosticSeverity = "success";
 
-    if (!isOnline || isStale) {
-        diagnosticMessage = "Check Connection or Microcontroller";
+    if (!isOnline) {
+        diagnosticMessage = isStale ? "Data Timeout - Check Connection" : "Hardware Disconnected";
         diagnosticSeverity = "critical";
     } else if (weight < 0) {
         diagnosticMessage = "Check Load Cell Calibration";
